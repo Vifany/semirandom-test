@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {
   AppBar,
   OutlinedInput,
@@ -9,8 +10,14 @@ import {
   IconButton,
   Tabs,
   Tab,
-  Box
+  Box,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
 } from '@mui/material';
+
 
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
@@ -50,10 +57,40 @@ function SearchInpunt(){
   );
 }
 
-function ReulstsScroll(){
+function ResultItem({item}){
 
+  return(
+    <ListItem>
+      <ListItemAvatar >
+        <Avatar alt={item.firstName} src = {item.avatarUrl}/>
+      </ListItemAvatar>
+      <ListItemText primary={item.firstName + ' ' + item.lastName} secondary={item.department} />
+    </ListItem>
+  );
+}
+
+ResultItem.propTypes = {
+  item: PropTypes.Object
+};
+
+function ReulstsScroll({items}){
+
+  return(
+    <div>
+      <List>
+        {items.map((item) => (  
+          <ResultItem key={item.id} item = {item} />
+        ))}
+      </List>
+    </div>
+  );
 
 }
+
+ReulstsScroll.propTypes = {
+  items: PropTypes.List
+};
+
 
 
 function ResultTabs(){
@@ -91,10 +128,9 @@ function ResultTabs(){
       <Tabs
         variant="scrollable"
         scrollButtons = 'auto'
-        indicatorColor='white'
+        // indicatorColor='#fff'
         value={value}
         onChange={handleChange}
-        aria-label="wrapped label tabs example"
       >
         {Object.entries(tabDict).map(([key, value]) => (  
           <Tab 
@@ -109,29 +145,59 @@ function ResultTabs(){
 }
 
 export default function MainPage(){
-
+  const exampleList = [
+    {
+      'id': '497f6eca-6276-4993-bfeb-53qweca',
+      'avatarUrl': 'https://loremflickr.com/320/240/dog?random=1',
+      'firstName': 'John',
+      'lastName': 'Doe',
+      'userTag': 'jd',
+      'department': 'android',
+      'position': 'developer',
+      'birthday': '1973-01-24',
+      'phone': '+79001234567'
+    },
+    {
+      'id': '497f6eca-6276-4993-bfeb-53gasfaf08',
+      'avatarUrl': 'https://loremflickr.com/320/240/girl?random=1',
+      'firstName': 'Mike',
+      'lastName': 'Smith',
+      'userTag': 'ms',
+      'department': 'ios',
+      'position': 'IOS developer',
+      'birthday': '1992-04-14',
+      'phone': '+79001234512'
+    },];
 
   return(
     <div>
-      <AppBar
-        color= 'secondary'
-        display = 'flex'
-        width = '100%'
-      >
-        <Stack>
-          <Typography
-            marginLeft = '1em'
-            variant='h5'
-            textAlign='left'
-          >
-            Поиск 
-          </Typography>  
-          <SearchInpunt/>
-          <ResultTabs/>
-          <ReulstsScroll/>
-        </Stack>
-      </AppBar>
+      <Box 
+        sx={{ 
+          marginBottom:16
+        }}>
+        <AppBar
+          color= 'secondary'
+          display = 'flex'
+          width = '100%'
+        >
+          <Stack>
+            <Typography
+              marginLeft = '1em'
+              variant='h5'
+              textAlign='left'
+            >
+              Поиск 
+            </Typography>  
+            <SearchInpunt/>
+            <ResultTabs/>
+            
+          </Stack>
+        </AppBar>
 
+      </Box>
+      <Box>
+        <ReulstsScroll items = {exampleList}/>
+      </Box>
     </div>
   );
 }
