@@ -4,7 +4,12 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import MainPage from './components/main-page';
 import theme from './Theme';
 
+import {
+  QueryClient,
+  QueryClientProvider,}
+  from '@tanstack/react-query';
 
+const queryClient = new QueryClient();
 
 
 function App() {
@@ -12,7 +17,9 @@ function App() {
     <div className="App">
       <ThemeProvider theme = {theme}>
         <CssBaseline/>
-        <MainPage/>
+        <QueryClientProvider client={queryClient}>
+          <MainPage/>
+        </QueryClientProvider>
       </ThemeProvider >
     </div>
   );

@@ -17,10 +17,34 @@ import {
   ListItemText,
   Avatar,
 } from '@mui/material';
+import axios from 'axios';
+
+import {
+  useQuery,
+  // useQueryClient,
+} from '@tanstack/react-query';
 
 
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
+
+
+
+const tabDict = {
+  all: 'Все',
+  android: 'Android',
+  ios: 'iOS',
+  design: 'Дизайн',
+  management:  'Менеджмент',
+  qa: 'QA',
+  back_office: 'Бэк-офис',
+  frontend: 'Frontend',
+  hr: 'HR',
+  pr: 'PR',
+  backend: 'Backend',
+  support: 'Техподдержка',
+  analytics: 'Аналитика'
+};
 
 function SearchInpunt(){
   return(
@@ -57,20 +81,46 @@ function SearchInpunt(){
   );
 }
 
-function ResultItem({item}){
+function ResultItem({item, isBirthday}){
+  const dDate = new Date(item.birthday);
+  const bDate = dDate.toLocaleDateString('ru-Ru', { day:'numeric', month:'short'});
+  const prim = (isBirthday? (<Typography ml='2rem'  noWrap align='right' variant='caption' inline > {bDate}</Typography>):'');
 
   return(
     <ListItem>
       <ListItemAvatar >
         <Avatar alt={item.firstName} src = {item.avatarUrl}/>
       </ListItemAvatar>
-      <ListItemText primary={item.firstName + ' ' + item.lastName} secondary={item.department} />
+      <ListItemText  display = 'flex' width = '100%'
+        primary={
+          <div style={{
+            display:'flex',
+            width: '100%',
+            alignItems: 'left'
+          }}>
+            <Typography inline  noWrap>
+              {item.firstName} {item.lastName}
+            </Typography>
+            <Typography ml='2rem' variant='caption' inline  noWrap >
+              {item.userTag}
+            </Typography>
+          </div>
+        } 
+        secondary={item.position}/>
+      <ListItemText align='right'  display = 'flex' width = '100%'
+        primary={
+          <div>
+            {prim}
+          </div>
+        }
+      />
     </ListItem>
   );
 }
 
 ResultItem.propTypes = {
-  item: PropTypes.Object
+  item: PropTypes.object,
+  isBirthday: PropTypes.bool
 };
 
 function ReulstsScroll({items}){
@@ -79,7 +129,7 @@ function ReulstsScroll({items}){
     <div>
       <List>
         {items.map((item) => (  
-          <ResultItem key={item.id} item = {item} />
+          <ResultItem key={item.id} item = {item} isBirthday={true} />
         ))}
       </List>
     </div>
@@ -93,30 +143,12 @@ ReulstsScroll.propTypes = {
 
 
 
-function ResultTabs(){
-  const [value, setValue] = React.useState('all');
-
+function ResultTabs({setFilter, value}){
+ 
   const handleChange = (event, newValue) => {
-    setValue(newValue);
+    setFilter(newValue);
   };
-  const tabDict = {
-    all: 'Все',
-    android: 'Android',
-    ios: 'iOS',
-    design: 'Дизайн',
-    management:  'Менеджмент',
-    qa: 'QA',
-    back_office: 'Бэк-офис',
-    frontend: 'Frontend',
-    hr: 'HR',
-    pr: 'PR',
-    backend: 'Backend',
-    support: 'Техподдержка',
-    analytics: 'Аналитика'
-  };
-
-
-
+  
   return(
     <Box 
       sx={{ 
@@ -144,30 +176,43 @@ function ResultTabs(){
   );
 }
 
+ResultTabs.propTypes = {
+  setFilter: PropTypes.func,
+  value: PropTypes.string
+};
+
 export default function MainPage(){
-  const exampleList = [
-    {
-      'id': '497f6eca-6276-4993-bfeb-53qweca',
-      'avatarUrl': 'https://loremflickr.com/320/240/dog?random=1',
-      'firstName': 'John',
-      'lastName': 'Doe',
-      'userTag': 'jd',
-      'department': 'android',
-      'position': 'developer',
-      'birthday': '1973-01-24',
-      'phone': '+79001234567'
-    },
-    {
-      'id': '497f6eca-6276-4993-bfeb-53gasfaf08',
-      'avatarUrl': 'https://loremflickr.com/320/240/girl?random=1',
-      'firstName': 'Mike',
-      'lastName': 'Smith',
-      'userTag': 'ms',
-      'department': 'ios',
-      'position': 'IOS developer',
-      'birthday': '1992-04-14',
-      'phone': '+79001234512'
-    },];
+  // const queryClient = useQueryClient();
+  const [filterQuery, setFilter] = React.useState('all');
+
+  const fetchEmploees = () =>
+    axios
+      .get('https://stoplight.io/mocks/kode-frontend-team/koder-stoplight/86566464/users',
+        {
+          params:{
+            // '__example':'all',
+            '__dynamic': 'true'
+          },
+          headers:{
+            'Accept': 'application/json, application/xml'
+          }
+        })
+      .then((res) => res.data);
+
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['Emploees'],
+    queryFn: fetchEmploees,
+  });
+
+  if (error) return <p>{error.message}</p>;
+  if (isLoading) return <p>Loading...</p>;
+
+  console.log(data);
+
+  const workList = data['items'];
+    
+  const scrollList = (filterQuery =='all' ? 
+    workList : workList.filter((item) => item.department === filterQuery));
 
   return(
     <div>
@@ -189,14 +234,14 @@ export default function MainPage(){
               Поиск 
             </Typography>  
             <SearchInpunt/>
-            <ResultTabs/>
+            <ResultTabs setFilter={setFilter} value ={filterQuery}/>
             
           </Stack>
         </AppBar>
 
       </Box>
       <Box>
-        <ReulstsScroll items = {exampleList}/>
+        <ReulstsScroll items = {scrollList} />
       </Box>
     </div>
   );
