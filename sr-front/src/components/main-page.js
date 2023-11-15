@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import {
   AppBar,
   OutlinedInput,
@@ -8,16 +7,14 @@ import {
   Stack,
   Typography,
   IconButton,
-  Tabs,
-  Tab,
   Box,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Avatar,
 } from '@mui/material';
 import axios from 'axios';
+import PropTypes from 'prop-types';
+
+import ReulstsScroll from './result-scroll';
+import ResultTabs from './result-tabs';
+
 
 import {
   useQuery,
@@ -46,7 +43,14 @@ const tabDict = {
   analytics: 'Аналитика'
 };
 
-function SearchInpunt(){
+
+SearchInpunt.propTypes = {
+  searchHandler: PropTypes.func,
+  searchValue: PropTypes.string
+};
+
+
+function SearchInpunt({searchHandler,searchValue }){
   return(
     <Paper
       elevation={0}
@@ -61,6 +65,8 @@ function SearchInpunt(){
         <OutlinedInput
           placeholder='Введите имя, почту, тег'
           size='small'
+          onChange={searchHandler}
+          value={searchValue}
           startAdornment ={
             <IconButton 
               size="large"
@@ -81,109 +87,24 @@ function SearchInpunt(){
   );
 }
 
-function ResultItem({item, isBirthday}){
-  const dDate = new Date(item.birthday);
-  const bDate = dDate.toLocaleDateString('ru-Ru', { day:'numeric', month:'short'});
-  const prim = (isBirthday? (<Typography ml='2rem'  noWrap align='right' variant='caption' inline > {bDate}</Typography>):'');
-
-  return(
-    <ListItem>
-      <ListItemAvatar >
-        <Avatar alt={item.firstName} src = {item.avatarUrl}/>
-      </ListItemAvatar>
-      <ListItemText  display = 'flex' width = '100%'
-        primary={
-          <div style={{
-            display:'flex',
-            width: '100%',
-            alignItems: 'left'
-          }}>
-            <Typography inline  noWrap>
-              {item.firstName} {item.lastName}
-            </Typography>
-            <Typography ml='2rem' variant='caption' inline  noWrap >
-              {item.userTag}
-            </Typography>
-          </div>
-        } 
-        secondary={item.position}/>
-      <ListItemText align='right'  display = 'flex' width = '100%'
-        primary={
-          <div>
-            {prim}
-          </div>
-        }
-      />
-    </ListItem>
-  );
-}
-
-ResultItem.propTypes = {
-  item: PropTypes.object,
-  isBirthday: PropTypes.bool
-};
-
-function ReulstsScroll({items}){
-
-  return(
-    <div>
-      <List>
-        {items.map((item) => (  
-          <ResultItem key={item.id} item = {item} isBirthday={true} />
-        ))}
-      </List>
-    </div>
-  );
-
-}
-
-ReulstsScroll.propTypes = {
-  items: PropTypes.List
-};
 
 
 
-function ResultTabs({setFilter, value}){
- 
-  const handleChange = (event, newValue) => {
-    setFilter(newValue);
-  };
-  
-  return(
-    <Box 
-      sx={{ 
-        width: '100%',
-        display: 'flex',
-        alignContent:'left'
-      }}
-    >
-      <Tabs
-        variant="scrollable"
-        scrollButtons = 'auto'
-        // indicatorColor='#fff'
-        value={value}
-        onChange={handleChange}
-      >
-        {Object.entries(tabDict).map(([key, value]) => (  
-          <Tab 
-            value={key} 
-            label={value} 
-            key= {key}
-          />
-        ))}
-      </Tabs>
-    </Box>
-  );
-}
 
-ResultTabs.propTypes = {
-  setFilter: PropTypes.func,
-  value: PropTypes.string
-};
+
+
+
+
+
 
 export default function MainPage(){
   // const queryClient = useQueryClient();
   const [filterQuery, setFilter] = React.useState('all');
+  const [searchQuery, setSearch] = React.useState('');
+
+  function handleSearch(e) {
+    setSearch(e.target.value.toLowerCase());
+  }
 
   const fetchEmploees = () =>
     axios
@@ -209,10 +130,20 @@ export default function MainPage(){
 
   console.log(data);
 
-  const workList = data['items'];
+  const workList = data['items']?.map(obj => { return { ...obj, birthday: new Date(obj.birthday) }; });
+  
     
-  const scrollList = (filterQuery =='all' ? 
+  const filetedList = (filterQuery =='all' ? 
     workList : workList.filter((item) => item.department === filterQuery));
+
+
+  //Search wörking, bitch!
+  const scrollList = (searchQuery == '' ?
+    filetedList : filetedList.filter((item) => 
+      item.firstName.toLowerCase().startsWith(searchQuery) ||
+      item.lastName.toLowerCase().startsWith(searchQuery) ||
+      item.userTag.toLowerCase().startsWith(searchQuery)
+    ));
 
   return(
     <div>
@@ -233,8 +164,8 @@ export default function MainPage(){
             >
               Поиск 
             </Typography>  
-            <SearchInpunt/>
-            <ResultTabs setFilter={setFilter} value ={filterQuery}/>
+            <SearchInpunt searchHandler={handleSearch} searchValue={searchQuery}/>
+            <ResultTabs tabList={tabDict} setFilter={setFilter} value ={filterQuery}/>
             
           </Stack>
         </AppBar>
