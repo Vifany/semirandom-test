@@ -7,11 +7,13 @@ import {
   ListItemAvatar,
   ListItemText,
   Avatar,
+  Divider
 } from '@mui/material';
 
 
 ReulstsScroll.propTypes = {
-  items: PropTypes.List
+  items: PropTypes.List,
+  sortBirthday: PropTypes.bool
 };
 
 ResultItem.propTypes = {
@@ -20,7 +22,7 @@ ResultItem.propTypes = {
 };
 
 function ResultItem({item, isBirthday}){
-  const bDate = item.birthday.toLocaleDateString('ru-Ru', { day:'numeric', month:'short'});
+  const bDate = item.birthday.toLocaleDateString('ru-Ru', { day:'numeric', month:'short', year:'numeric'});
   const prim = (isBirthday? (<Typography ml='2rem'  noWrap align='right' variant='caption' inline > {bDate}</Typography>):'');
 
   return(
@@ -57,13 +59,29 @@ function ResultItem({item, isBirthday}){
 
 
 
-export default function ReulstsScroll({items}){
+export default function ReulstsScroll({items,sortBirthday}){
+
+  if (sortBirthday){
+    items.sort(((a, b) => b.birthday - a.birthday));
+  }
+
+  const today = new Date();
+
   return(
     <div>
       <List>
-        {items.map((item) => (  
-          <ResultItem key={item.id} item = {item} isBirthday={true} />
-        ))}
+        {items.map(function (item){
+          if ((item.birthday.getMonth() < today.getMonth()) && (item.birthday.getDay() < today.getDay())){
+            return(
+              <div key={item.id}>
+                <Divider key={item.id}>{today.getFullYear()+1}</Divider>
+                <ResultItem key={item.id} item = {item} isBirthday={true}/>
+              </div>
+            );
+          }else{
+            return(
+              <ResultItem key={item.id} item = {item} isBirthday={true}/>);}
+        })}
       </List>
     </div>
   );
