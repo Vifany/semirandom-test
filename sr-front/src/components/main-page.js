@@ -14,23 +14,26 @@ import {
   Radio,
   RadioGroup
 } from '@mui/material';
-import axios from 'axios';
 import PropTypes from 'prop-types';
 
 import ReulstsScroll from './result-scroll';
 import ResultTabs from './result-tabs';
+import {
+  getDayOfYear, 
+  // getDayInYear
+} from 'date-fns';
+
 
 
 import {
-  useQuery,
-  // useQueryClient,
+  useQueryClient,
 } from '@tanstack/react-query';
 
 
 import SearchIcon from '@mui/icons-material/Search';
 import SortIcon from '@mui/icons-material/Sort';
 
-const today = new Date();
+
 
 const tabDict = {
   all: 'Все',
@@ -129,8 +132,16 @@ function BirthdaySwitcher(
           value={sortType}
           onChange = {sortHandler}
         >
-          <FormControlLabel value="alphabet" control={<Radio />} label="По алфавиту" />
-          <FormControlLabel value="birthday" control={<Radio />} label="По дню рождения" />
+          <FormControlLabel 
+            value="alphabet" 
+            control={<Radio />} 
+            label="По алфавиту" 
+          />
+          <FormControlLabel 
+            value="birthday" 
+            control={<Radio />} 
+            label="По дню рождения" 
+          />
         </RadioGroup>
       </FormControl>
     </Dialog>
@@ -145,11 +156,14 @@ function BirthdaySwitcher(
 
 
 export default function MainPage(){
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const [filterQuery, setFilter] = React.useState('all');
   const [searchQuery, setSearch] = React.useState('');
   const [sortOpen, setOpen] = React.useState('');
   const [sortType, setSort] = React.useState('alphabet');
+
+  let today = getDayOfYear(new Date());
+
   function sortHandler(e){
     setSort(e.target.value);
   }
@@ -163,31 +177,18 @@ export default function MainPage(){
     setSearch(e.target.value.toLowerCase());
   }
 
-  const fetchEmploees = () =>
-    axios
-      .get('https://stoplight.io/mocks/kode-frontend-team/koder-stoplight/86566464/users',
-        {
-          params:{
-            // '__example':'all',
-            '__dynamic': 'true'
-          },
-          headers:{
-            'Accept': 'application/json, application/xml'
-          }
-        })
-      .then((res) => res.data);
 
-  const { data, error, isLoading } = useQuery({
-    queryKey: ['Emploees'],
-    queryFn: fetchEmploees,
-  });
 
-  if (error) return <p>{error.message}</p>;
-  if (isLoading) return <p>Loading...</p>;
+  const data = queryClient.getQueryData(['Emploees']);
 
   
 
-  const workList = data['items']?.map(obj => { return { ...obj, birthday: new Date(obj.birthday) }; });
+  const workList = data['items']?.map(obj => { 
+    return { ...obj,
+      birthday: new Date(obj.birthday), 
+      birthDOYBias: getDayOfYear(new Date(obj.birthday)) - today
+    }; 
+  });
   
     
   const filetedList = (filterQuery =='all' ? 
@@ -202,17 +203,6 @@ export default function MainPage(){
       item.userTag.toLowerCase().startsWith(searchQuery)
     ));
 
-  // const result = (function () {
-  //   switch (step) {
-  //     case Step.One:
-  //       return { one: 1 };
-  //     case Step.Two:
-  //       return { two: 2 };
-  //     case Step.Three:
-  //       return { three: 4 };
-  //   }
-  // })();
-
   const scrollList = (
     function (){
       switch(sortType){
@@ -220,16 +210,20 @@ export default function MainPage(){
         return(searchedList.sort(
           (a, b) => a.firstName.localeCompare(b.firstName)
         ));
-      case 'birthday':
-        return(searchedList.sort(
-          (a, b) => (today - a.birthday) - (today-b.birthday)
-        ));
+      case 'birthday': {
+        let sub = searchedList.sort(
+          (a, b) => a.birthDOYBias - b.birthDOYBias
+        );
+        let separator = [{isSeparator:true}];
+        let nextYear = (sub.filter((item) => item.birthDOYBias < 0));
+        let toScroll = (
+          sub.filter((item) => item.birthDOYBias > 0)
+        ).concat(separator, nextYear);
+        return(toScroll);
+      }
       }
     }
-  )();
-  
-  console.log(scrollList);
-  
+  )(); 
   
 
   return(
@@ -256,7 +250,11 @@ export default function MainPage(){
               searchValue={searchQuery}
               sortButtonHandler={openHandler}
             />
-            <ResultTabs tabList={tabDict} setFilter={setFilter} value ={filterQuery}/>
+            <ResultTabs 
+              tabList={tabDict}
+              setFilter={setFilter}
+              value ={filterQuery}
+            />
             
           </Stack>
         </AppBar>
@@ -269,7 +267,12 @@ export default function MainPage(){
         closeHandler = {closeHandler}
       />
       <Box>
-        <ReulstsScroll items = {scrollList}  />
+        <ReulstsScroll 
+          items = {scrollList} 
+          sortBirthday ={
+            (sortType=='birthday')
+          }
+        />
       </Box>
     </div>
   );

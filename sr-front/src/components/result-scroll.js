@@ -9,7 +9,9 @@ import {
   Avatar,
   Divider
 } from '@mui/material';
-
+import{ 
+  useNavigate
+} from 'react-router-dom';
 
 ReulstsScroll.propTypes = {
   items: PropTypes.List,
@@ -22,11 +24,14 @@ ResultItem.propTypes = {
 };
 
 function ResultItem({item, isBirthday}){
+  const navigate = useNavigate();
+  const linkTo = `/user/${item.id}`;
+  const handleLink = ()=> navigate(linkTo);
+
   const bDate = item.birthday.toLocaleDateString('ru-Ru', { day:'numeric', month:'short', year:'numeric'});
   const prim = (isBirthday? (<Typography ml='2rem'  noWrap align='right' variant='caption' inline > {bDate}</Typography>):'');
-
   return(
-    <ListItem>
+    <ListItem onClick={handleLink}>
       <ListItemAvatar >
         <Avatar alt={item.firstName} src = {item.avatarUrl}/>
       </ListItemAvatar>
@@ -61,26 +66,21 @@ function ResultItem({item, isBirthday}){
 
 export default function ReulstsScroll({items,sortBirthday}){
 
-  if (sortBirthday){
-    items.sort(((a, b) => b.birthday - a.birthday));
-  }
-
   const today = new Date();
 
   return(
     <div>
       <List>
         {items.map(function (item){
-          if ((item.birthday.getMonth() < today.getMonth()) && (item.birthday.getDay() < today.getDay())){
+          if (item['isSeparator']==true){
             return(
               <div key={item.id}>
                 <Divider key={item.id}>{today.getFullYear()+1}</Divider>
-                <ResultItem key={item.id} item = {item} isBirthday={true}/>
               </div>
             );
-          }else{
+          }else if (item['isSeparator']!=true){
             return(
-              <ResultItem key={item.id} item = {item} isBirthday={true}/>);}
+              <ResultItem key={item.id} item = {item} isBirthday={sortBirthday}/>);}
         })}
       </List>
     </div>
