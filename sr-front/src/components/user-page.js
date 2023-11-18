@@ -1,17 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import CallIcon from '@mui/icons-material/Call';
+import CakeIcon from '@mui/icons-material/Cake';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { 
-  Card,
-  CardContent,
+  Stack,
   Box,
   Typography,
   Avatar,
   List,
   ListItem,
-  Stack,
+  AppBar,
   ListItemText,
-  ListItemButton
+  ListItemIcon,
+  ListItemButton,
+  IconButton,
+  Toolbar,
+  Divider
 } from '@mui/material';
+
+import{ 
+  useNavigate
+} from 'react-router-dom';
 
 import {
   useQueryClient,
@@ -33,69 +43,74 @@ export default function UserPage(){
   const data = queryClient.getQueryData(['Emploees']);
   const item = data['items'].filter((item) => item.id === params.userId)[0];
   const bday = new Date(item.birthday).toLocaleDateString('ru-Ru', { day:'numeric', month:'short', year:'numeric'});
-  
+  const navigate = useNavigate();
+  const handleLink = ()=> navigate('/');
 
   return(
-    <Box
-      display = 'flex'
-      justifyContent='center'
-      alignContent='center'
-      margin={1}
-    >
-      <Card
-        display = 'flex'
-        sx={{         
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}
+    <div>
+      <AppBar elevation={0}>
+        <Toolbar>
+          <IconButton alignContent='left' justifyContent='left' onClick={handleLink}>
+            <ArrowBackIcon/>
+          </IconButton>
+        </Toolbar>
         
+      </AppBar>
+      <Box
+        display = 'flex'
+        justifyContent='center'
+        alignContent='center'
+        sx={{
+          marginTop: 7,
+          backgroundColor: 'primary.main'
+        }}
       >
-        <CardContent
-          sx={{
-            backgroundColor: 'primary.main',
-            width: '100%'
-          }}
-          display = 'flex'
-          alignContent='center'
-        >
-          <Stack>
-            <Avatar 
-              display = 'flex'
-              sx={{ 
-                width: 120, 
-                height: 120,
-                alignSelf: 'center'
-              }}
-              alt={item.firstName} 
-              src = {item.avatarUrl}/>
-            <Typography>{item.firstName} {item.lastName} <br/>
-              {item.department}
-            </Typography>
-          </Stack>
-        </CardContent>
-        <CardContent 
-          sx = {{
-            display: 'flex',
-            alignContent: 'left'
-          }}
-        >
-          <List >
-            <ListItem>
-              <ListItemButton href={`tel:${item.phone}`}>
-                {item.phone}
-              </ListItemButton>
-            </ListItem>
-            <ListItem>
-              <ListItemText>
-                {bday}
-              </ListItemText>
-              
-            </ListItem>
-          </List>
-        </CardContent>
-      </Card>
-    </Box>
+        <Stack>
+          <Avatar 
+            display = 'flex'
+            sx={{ 
+              marginTop: 1,
+              width: 120, 
+              height: 120,
+              alignSelf: 'center'
+            }}
+            alt={item.firstName} 
+            src = {item.avatarUrl}/>
+          <Typography variant='h5'>
+            {item.firstName} {item.lastName}<br/>
+          </Typography>
+          <Typography variant ='caption'>
+            {item.department}
+          </Typography>
+        </Stack>
+        
+      </Box>
+      <List 
+        sx={{
+          backgroundColor:'secondary.main'
+        }}
+      >
+
+        <ListItem>
+          <ListItemButton disableGutters href={`tel:${item.phone}`}>
+            <ListItemIcon>
+              <CallIcon />
+            </ListItemIcon>
+            {item.phone}
+          </ListItemButton>
+        </ListItem>
+        <Divider/>
+        <ListItem>
+          <ListItemText>
+            <ListItemIcon>
+              <CakeIcon />
+            </ListItemIcon>
+            {bday}
+          </ListItemText>
+          
+        </ListItem>
+      </List>
+    </div>
   );
 
 }

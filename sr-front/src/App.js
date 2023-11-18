@@ -53,7 +53,8 @@ function Stuffing(){
         {
           params:{
             '__example':'all',
-            // '__dynamic': 'true'
+            // '__dynamic': 'true',
+            // '__code':500
           },
           headers:{
             'Accept': 'application/json, application/xml'
@@ -67,15 +68,13 @@ function Stuffing(){
     queryFn: fetchEmploees, 
   });
 
-
-  if (error) return <p>{error.message}</p>;
   if (isLoading) return <p>Loading...</p>;
   return(
     <ThemeProvider theme = {theme}>
       <CssBaseline/>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<MainPage/>}/>
+          <Route path="/" element={<MainPage error={error}/>}/>
           <Route path="/user/:userId" element={<UserPage/>}/>
         </Routes>
       </BrowserRouter>

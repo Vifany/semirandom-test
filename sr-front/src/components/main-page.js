@@ -149,39 +149,18 @@ function BirthdaySwitcher(
 }
 
 
+ResView.propTypes={
+  sortType: PropTypes.string,
+  filterQuery: PropTypes.string,
+  searchQuery: PropTypes.string,
+};
 
-
-
-
-
-
-export default function MainPage(){
-  const queryClient = useQueryClient();
-  const [filterQuery, setFilter] = React.useState('all');
-  const [searchQuery, setSearch] = React.useState('');
-  const [sortOpen, setOpen] = React.useState('');
-  const [sortType, setSort] = React.useState('alphabet');
-
+function ResView({sortType, filterQuery, searchQuery}){
   let today = getDayOfYear(new Date());
 
-  function sortHandler(e){
-    setSort(e.target.value);
-  }
-  function openHandler(){
-    setOpen(true);
-  }
-  function closeHandler(){
-    setOpen(false);
-  }
-  function handleSearch(e) {
-    setSearch(e.target.value.toLowerCase());
-  }
-
-
+  const queryClient = useQueryClient();
 
   const data = queryClient.getQueryData(['Emploees']);
-
-  
 
   const workList = data['items']?.map(obj => { 
     return { ...obj,
@@ -189,11 +168,9 @@ export default function MainPage(){
       birthDOYBias: getDayOfYear(new Date(obj.birthday)) - today
     }; 
   });
-  
-    
+
   const filetedList = (filterQuery =='all' ? 
     workList : workList.filter((item) => item.department === filterQuery));
-
 
   //Search wörking, bitch!
   const searchedList = (searchQuery == '' ?
@@ -224,6 +201,69 @@ export default function MainPage(){
       }
     }
   )(); 
+
+  return(
+    <Box>
+      <ReulstsScroll 
+        items = {scrollList}
+        sortBirthday ={
+          (sortType=='birthday')
+        }
+      />
+    </Box>
+  );
+}
+
+function ErrView(){
+  return(
+    <Box
+      display='flex'
+      justifyContent = 'center'
+      alignContent = 'center'
+      marginTop = {50}
+    >
+      <Stack>
+        <Typography variant='h3'>
+          Там какая-то ошибка
+        </Typography>
+        <Typography variant='h5'>
+          Наверное её починят
+        </Typography>
+      </Stack>
+
+    </Box>
+  );
+}
+
+MainPage.propTypes={
+  error: PropTypes.object
+};
+
+export default function MainPage({error}){
+
+  const [filterQuery, setFilter] = React.useState('all');
+  const [searchQuery, setSearch] = React.useState('');
+  const [sortOpen, setOpen] = React.useState('');
+  const [sortType, setSort] = React.useState('alphabet');
+
+  function sortHandler(e){
+    setSort(e.target.value);
+  }
+  function openHandler(){
+    setOpen(true);
+  }
+  function closeHandler(){
+    setOpen(false);
+  }
+  function handleSearch(e) {
+    setSearch(e.target.value.toLowerCase());
+  }
+    
+  const view =(error? (<ErrView/>) :(<ResView 
+    sortType = {sortType} 
+    filterQuery = {filterQuery} 
+    searchQuery={searchQuery}
+  />));
   
 
   return(
@@ -266,14 +306,7 @@ export default function MainPage(){
         sortType = {sortType}
         closeHandler = {closeHandler}
       />
-      <Box>
-        <ReulstsScroll 
-          items = {scrollList} 
-          sortBirthday ={
-            (sortType=='birthday')
-          }
-        />
-      </Box>
+      {view}
     </div>
   );
 }

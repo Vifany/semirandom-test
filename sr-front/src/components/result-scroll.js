@@ -7,7 +7,9 @@ import {
   ListItemAvatar,
   ListItemText,
   Avatar,
-  Divider
+  Divider,
+  Box,
+  Stack
 } from '@mui/material';
 import{ 
   useNavigate
@@ -15,7 +17,7 @@ import{
 
 ReulstsScroll.propTypes = {
   items: PropTypes.List,
-  sortBirthday: PropTypes.bool
+  sortBirthday: PropTypes.bool,
 };
 
 ResultItem.propTypes = {
@@ -42,6 +44,7 @@ function ResultItem({item, isBirthday}){
             width: '100%',
             alignItems: 'left'
           }}>
+            
             <Typography inline  noWrap>
               {item.firstName} {item.lastName}
             </Typography>
@@ -67,6 +70,26 @@ function ResultItem({item, isBirthday}){
 export default function ReulstsScroll({items,sortBirthday}){
 
   const today = new Date();
+  if (items.length == 0){
+    return(
+      <Box
+        display='flex'
+        justifyContent = 'center'
+        alignContent = 'center'
+        marginTop = {50}
+      >
+        <Stack>
+          <Typography variant='h3'>
+            Тут нет даже куриц
+          </Typography>
+          <Typography variant='h5'>
+            Поробуйте ввести другой запрос
+          </Typography>
+        </Stack>
+
+      </Box>
+    );
+  }
 
   return(
     <div>
